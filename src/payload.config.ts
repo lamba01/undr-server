@@ -27,8 +27,16 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
-  cors: ['http://localhost:3001', 'https://undr-store.vercel.app'],
-  csrf: ['http://localhost:3001', 'https://undr-store.vercel.app'],
+  cors: [
+    'http://localhost:3001',
+    'https://undr-store.vercel.app',
+    'https://undr-server.onrender.com',
+  ],
+  csrf: [
+    'http://localhost:3001',
+    'https://undr-store.vercel.app',
+    'https://undr-server.onrender.com',
+  ],
   admin: {
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
