@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { Orders } from '@/collections/Orders'
 import {
   BoldFeature,
   EXPERIMENTAL_TableFeature,
@@ -26,6 +27,8 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  cors: ['http://localhost:3001', 'http://localhost:3000'],
+  csrf: ['http://localhost:3001', 'http://localhost:3000'],
   admin: {
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
@@ -37,7 +40,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Categories, Media],
+  collections: [Users, Pages, Categories, Media, Orders],
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',

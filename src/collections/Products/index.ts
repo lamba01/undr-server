@@ -49,12 +49,21 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     variants: true,
     enableVariants: true,
     gallery: true,
-    priceInUSD: true,
+    priceInNGN: true,
     inventory: true,
     meta: true,
   },
   fields: [
     { name: 'title', type: 'text', required: true },
+    {
+      name: 'priceInNGN',
+      type: 'number',
+      required: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Price in Nigerian Naira (₦)',
+      },
+    },
     {
       type: 'tabs',
       tabs: [
