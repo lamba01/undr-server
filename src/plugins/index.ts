@@ -40,10 +40,8 @@ export const plugins: Plugin[] = [
   cloudStoragePlugin({
     collections: {
       media: {
-        adapter: {
-          generateURL: ({ filename }) => {
-            return cloudinary.url(`undr-boutique/${filename}`, { secure: true })
-          },
+        adapter: () => ({
+          name: 'cloudinary',
           handleUpload: async ({ data, file }: any) => {
             const result = await cloudinary.uploader.upload(file.tempFilePath || '', {
               public_id: `undr-boutique/${file.filename}`,
@@ -62,7 +60,7 @@ export const plugins: Plugin[] = [
           staticHandler: async (req: any, res: any, next: any) => {
             next()
           },
-        } as any,
+        }),
         disableLocalStorage: true,
         generateFileURL: ({ filename }: any) => {
           return cloudinary.url(`undr-boutique/${filename}`, { secure: true })
