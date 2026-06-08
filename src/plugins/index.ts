@@ -4,16 +4,24 @@ import { Plugin } from 'payload'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
+import { cloudStoragePlugin } from '@payloadcms/plugin-cloud-storage'
+import { v2 as cloudinary } from 'cloudinary'
 
 import { Page, Product } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
 import { ProductsCollection } from '@/collections/Products'
+import { isAdmin } from '@/access/isAdmin'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
-import { isAdmin } from '@/access/isAdmin'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
-import { cloudinaryStorage } from 'payload-cloudinary'
+
+// Configure cloudinary OUTSIDE the plugins array
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+})
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
@@ -21,7 +29,6 @@ const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
 
 const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
   const url = getServerSideURL()
-
   return doc?.slug ? `${url}/${doc.slug}` : url
 }
 
@@ -30,17 +37,38 @@ export const plugins: Plugin[] = [
     generateTitle,
     generateURL,
   }),
-  cloudinaryStorage({
-    config: {
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-      api_key: process.env.CLOUDINARY_API_KEY!,
-      api_secret: process.env.CLOUDINARY_API_SECRET!,
-    },
+  cloudStoragePlugin({
     collections: {
-      media: true,
+      media: {
+        adapter: {
+          generateURL: ({ filename }) => {
+            return cloudinary.url(`undr-boutique/${filename}`, { secure: true })
+          },
+          handleUpload: async ({ data, file }: any) => {
+            const result = await cloudinary.uploader.upload(file.tempFilePath || '', {
+              public_id: `undr-boutique/${file.filename}`,
+              resource_type: 'auto',
+            })
+            return {
+              ...data,
+              url: result.secure_url,
+            }
+          },
+          handleDelete: async ({ doc }: any) => {
+            if (doc.filename) {
+              await cloudinary.uploader.destroy(`undr-boutique/${doc.filename}`)
+            }
+          },
+          staticHandler: async (req: any, res: any, next: any) => {
+            next()
+          },
+        } as any,
+        disableLocalStorage: true,
+        generateFileURL: ({ filename }: any) => {
+          return cloudinary.url(`undr-boutique/${filename}`, { secure: true })
+        },
+      },
     },
-    folder: 'undr-boutique',
-    disableLocalStorage: true,
   }),
   formBuilderPlugin({
     fields: {
