@@ -43,10 +43,21 @@ export const plugins: Plugin[] = [
         adapter: () => ({
           name: 'cloudinary',
           handleUpload: async ({ data, file }: any) => {
-            const result = await cloudinary.uploader.upload(file.tempFilePath || '', {
-              public_id: `undr-boutique/${file.filename}`,
-              resource_type: 'auto',
-            })
+            const result = (await new Promise((resolve, reject) => {
+              cloudinary.uploader
+                .upload_stream(
+                  {
+                    public_id: `undr-boutique/${file.filename}`,
+                    resource_type: 'auto',
+                  },
+                  (error, result) => {
+                    if (error) reject(error)
+                    else resolve(result)
+                  },
+                )
+                .end(file.buffer)
+            })) as any
+
             return {
               ...data,
               url: result.secure_url,
